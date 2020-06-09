@@ -65,7 +65,7 @@ run_glmm <- function(token){
   #
   prds = predict(fit, newdata = test)
   
-  res = list(mod = fit, test_set = test, itcR2 = R2, br2 = test_r2, scaling = scaling_fct, oob_data = oob)
+  res = list(mod = fit, test_set = test, itcR2 = R2, br2 = test_r2, scaling = scaling_fct, oob_data = oob, kfold=kfold)
   saveRDS(res, paste("./outdir/mods/", token, "_md.rds", sep=""))
   return(R2)
 }
