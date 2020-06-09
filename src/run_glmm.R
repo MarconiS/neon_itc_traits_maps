@@ -21,9 +21,14 @@ run_glmm <- function(token){
     slice(1)
 
   set.seed(1987)
-  train = train %>% group_by(siteID) %>% sample_frac(0.8)
+  train = train %>% group_by(siteID) %>% sample_frac(0.7)
   train = cfc_data %>% filter(individualID %in% unique(train$individualID))
   test = cfc_data %>% filter(!individualID %in% unique(train$individualID))
+  set.seed(1987)
+  oob = test %>% select(individualID, siteID) %>% unique %>% group_by(siteID) %>% sample_frac(0.4)
+  oob = test %>% filter(individualID %in% unique(oob$individualID))
+  test = test %>% filter(!individualID %in% unique(oob$individualID))
+  
   train["elevation"] = train["elevation"] %>%
     mutate_if(is.numeric, scale)
 
@@ -52,12 +57,12 @@ run_glmm <- function(token){
              #prior = set_prior(horseshoe()),
              chains = 2,
              iter = 3000)
-  
+  kfold <- kfold(fit, chains = 1, folds = "stratified", group ="siteID", K = 3)
   test_r2 = bayes_R2(fit, newdata = test)
   #
   prds = predict(fit, newdata = test)
   
-  res = list(mod = fit, test_set = test, itcR2 = R2, br2 = test_r2, scaling = scaling_fct)
+  res = list(mod = fit, test_set = test, itcR2 = R2, br2 = test_r2, scaling = scaling_fct, oob_data = oob)
   saveRDS(res, paste("./outdir/mods/", token, "_md.rds", sep=""))
   return(R2)
 }
