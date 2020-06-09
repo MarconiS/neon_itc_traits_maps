@@ -43,13 +43,16 @@ run_glmm <- function(token){
   test["elevation"] = lapply(c(1:nrow(scaling_fct)), function(x) {
     dat = test["elevation"]
     scale(dat[,x], center = scaling_fct[x,"center"], scale = scaling_fct[x,"scale"])})
+  oob["elevation"] = lapply(c(1:nrow(scaling_fct)), function(x) {
+    dat = oob["elevation"]
+    scale(dat[,x], center = scaling_fct[x,"center"], scale = scaling_fct[x,"scale"])})
   set.seed(token)
   train = train %>% group_by(individualID) %>%
     sample_n(1)
   
   fit <- brm(f1,
              data = train,
-             cores = 2,
+             cores = 1,
              seed = 12,
              family = lognormal(),
              control = list(adapt_delta = 0.99),
