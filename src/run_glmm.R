@@ -19,6 +19,7 @@ run_glmm <- function(token){
   
   train = cfc_data %>% group_by(individualID) %>%
     slice(1)
+
   set.seed(1987)
   train = train %>% group_by(siteID) %>% sample_frac(0.8)
   train = cfc_data %>% filter(individualID %in% unique(train$individualID))
@@ -56,33 +57,12 @@ run_glmm <- function(token){
   #
   prds = predict(fit, newdata = test)
   
-  derived = lapply(1:4, function(x){
-    quart = prds[,x,] %>% data.frame
-    quart["individualID"] = test$individualID
-    quart  %>% group_by(individualID) %>%
-      summarize_all(median)
-  })
-  get_mod_r2 <- function(pred, obs){
-    1 - sum((pred - obs)^2) / sum((obs - mean(obs, na.rm=T))^2)
-  } 
-  
-  
-  test_itc = test %>% select(c("individualID", tr_nm)) %>% unique
-  
-  R2 = lapply(1:length(tr_nm), function(x){
-    data_test = inner_join(derived[[1]][,c(1, x+1)], 
-                           test_itc[,c(1, x+1)], by="individualID")
-    get_mod_r2((data_test[[2]]), (data_test[[3]]))
-  })
-  R2 = unlist(R2)
-  R2
-
   res = list(mod = fit, test_set = test, itcR2 = R2, br2 = test_r2, scaling = scaling_fct)
   saveRDS(res, paste("./outdir/mods/", token, "_md.rds", sep=""))
   return(R2)
 }
 
 library(parallel)
-cl <- makeCluster(4)
+cl <- makeCluster(32)
 stack_r2 = parLapply(cl, sample.int(10000, 40), run_glmm)
 stopCluster(cl)
