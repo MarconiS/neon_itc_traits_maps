@@ -108,8 +108,10 @@ run_glmm <- function(token){
     saveRDS(res, paste("./outdir/mods/", token, "_md.rds", sep=""))
   return(R2)
 }
-
-library(parallel)
-cl <- makeCluster(2)
-stack_r2 = parLapply(cl, sample.int(10000, 2), run_glmm)
-stopCluster(cl)
+args <- commandArgs()
+print(args)
+run_glmm(args[6])
+#library(parallel)
+#cl <- makeCluster(2)
+#stack_r2 = parLapply(cl, sample.int(10000, 2), run_glmm)
+#stopCluster(cl)
